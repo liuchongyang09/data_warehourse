@@ -77,7 +77,7 @@ select
 from studyx_big_log.user_buried_point_log
 where client_type='6'
   and actionId='confirm2-1'
-  and server_time_fmt BETWEEN '${start_date}' and '${end_date}'
+  and server_time_fmt BETWEEN ${start_date} and ${end_date}
 UNION
 select count(1) cn -- StudyX_Homework 今日失败解题数
 from studyx_big_log.user_buried_point_log
@@ -85,5 +85,5 @@ where `event` = 'click'
   and locate('unlock the answer-',actionId)>0
   and client_type='6'
   and user_id>0
-  and server_time_fmt between '${start_date}' and '${end_date}'
+  and server_time_fmt between ${start_date} and ${end_date}
 ;

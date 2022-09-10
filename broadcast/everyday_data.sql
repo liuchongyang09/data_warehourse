@@ -5,7 +5,7 @@ select
      ,data9
 from studyx_big_log.user_buried_point_log ubpl
 where
-    server_time_fmt between '${start_date}' and '${end_date}'
+    server_time_fmt between ${start_date} and ${end_date}
   and  event = 'Exposure'
   and pageId1 like '%matching_results?%'
   and actionId = 'search'
@@ -24,7 +24,7 @@ WHERE
         `event` = 'pv'
   AND pageId1 LIKE '%#posId%'
   AND pageId1 LIKE '%matching_details%'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 -- group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 --    ,data9
 ;
@@ -42,7 +42,7 @@ select
 --    ,data9
 FROM
     studyx_big_log.user_buried_point_log
-where server_time_fmt between '${start_date}' and '${end_date}'
+where server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 --    ,data9
 ;
@@ -57,7 +57,7 @@ WHERE
         `event` = 'click'
   AND pageId1 LIKE '%matching_results%'
   and actionId like '%View Answer%'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- , data9
 ;
@@ -68,12 +68,12 @@ select
     dis_log_in_cnt '今日登录用户点击解锁按钮次数(去重)'
      ,log_in '今日登录用户点击解锁按钮的人数'
      ,log_in_cnt '今日登录用户点击解锁按钮次数'
-     ,dis_un_log_in_cnt '今日未登录用户点击解锁按钮次数(去重)'
-     ,un_log_in '今日未登录用户点击解锁按钮的人数'
-     ,un_log_in_cnt '今日未登录用户点击解锁按钮次数'
-     ,(dis_log_in_cnt + dis_un_log_in_cnt)  '点击Unlock the answer总次数(去重)'
-     ,(dis_log_in_cnt + dis_un_log_in_cnt)/cnt*100 as rate
-     ,cnt
+#      ,dis_un_log_in_cnt '今日未登录用户点击解锁按钮次数(去重)'
+#      ,un_log_in '今日未登录用户点击解锁按钮的人数'
+#      ,un_log_in_cnt '今日未登录用户点击解锁按钮次数'
+#      ,(dis_log_in_cnt + dis_un_log_in_cnt)  '点击Unlock the answer总次数(去重)'
+#      ,(dis_log_in_cnt + dis_un_log_in_cnt)/cnt*100 as rate
+#      ,cnt
 -- ,data9
      ,dt
 from(
@@ -91,7 +91,7 @@ from(
             studyx_big_log.user_buried_point_log
         WHERE
                 `event` = 'click'
-          AND server_time_fmt between '${start_date}' and '${end_date}'
+          AND server_time_fmt between ${start_date} and ${end_date}
         group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- , data9
     )a
@@ -109,7 +109,7 @@ FROM
 WHERE
         `event` = 'pv'
   AND pageId1 LIKE '%matching_result%'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ;
@@ -125,7 +125,7 @@ WHERE
   AND pageId1 LIKE '%matching_details%'
   and actionId = 'unlock the answer'
   and platform  = 6
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- , data9
 ;
@@ -145,7 +145,7 @@ WHERE
   and user_id != '0'
   and user_id != ''
   and user_id is not null
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ;
@@ -163,7 +163,7 @@ where `event` = 'click'
   and user_id != '0'
   and user_id != ''
   and user_id is not null
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ;
@@ -182,7 +182,7 @@ where `event` = 'click'
   and user_id != '0'
   and user_id != ''
   and user_id is not null
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- , data9
 ;
@@ -198,7 +198,7 @@ where client_type=6
   and user_id != '0'
   and user_id != ''
   and user_id is not null
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ;
@@ -212,7 +212,7 @@ select
 from studyx_big_log.user_buried_point_log
 where client_type=6
   and actionId='unlock the answer'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ;
@@ -228,7 +228,7 @@ where client_type=6
   and user_id != '0'
   and user_id != ''
   and user_id is not null
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ;
@@ -244,7 +244,7 @@ where client_type=6
   and user_id != '0'
   and user_id != ''
   and user_id is not null
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
     ---------------------
@@ -257,7 +257,7 @@ from studyx_big_log.user_buried_point_log
 where `event` = 'click'
   and locate('unlock the answer-',actionId)>0
   and client_type=6 and user_id>0
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
 ###########################付费相关#################################################################
@@ -274,7 +274,7 @@ where event = 'pv'
   and pageId1 like 'my_points%'
   and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- , data9
 ;
@@ -291,7 +291,7 @@ where event = 'click'
   and actionId like 'points pay%'
   and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 -- and user_id = '1000031279'
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
@@ -314,7 +314,7 @@ where event = 'click'
   and actionId like 'points pay%'
   and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- ,actionId
 -- ,pageId1
@@ -341,7 +341,7 @@ from (
            and (actionId like 'points pay%' or actionId like 'payDom%')
            and user_id > '0'
            and platform = '6'
-           AND server_time_fmt between '${start_date}' and '${end_date}'
+           AND server_time_fmt between ${start_date} and ${end_date}
          group by
              user_id
                 ,actionId
@@ -369,7 +369,7 @@ where event = 'pv'
   and actionData = 'succeeded'
   and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by
     substring(date_add(server_time_fmt,interval 8 hour),1,10)
        ,data9
@@ -383,23 +383,23 @@ select
      ,count(distinct user_id)
      ,user_id
      ,substring(date_add(server_time_fmt,interval 8 hour),1,10) as dt
-     ,data9
+#      ,data9
 from studyx_big_log.user_buried_point_log ubpl
 where event = 'click'
   and pageId1 like 'matching_details%'
   and actionId in ('Unlock the answer-a' ,'Confirm2-2')
 -- and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
-       , data9
+#        , data9
        ,user_id
 ;
 ----------- 唤起结算台的用户id-------------
 select
     user_id
      ,substring(date_add(server_time_fmt,interval 8 hour),1,10) as dt
-     ,data9
+#      ,data9
      ,ip
      ,actionId
 from studyx_big_log.user_buried_point_log ubpl
@@ -408,9 +408,9 @@ where event = 'click'
   and actionId in ('Unlock the answer-a' ,'Confirm2-2')
 -- and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
-       , data9
+#        , data9
        ,user_id
        ,ip
        ,actionId
@@ -429,7 +429,7 @@ where event = 'click'
   and actionId like 'points pay%'
   and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
 -- ,actionId
 -- ,pageId1
@@ -456,7 +456,7 @@ from (
            and (actionId like 'points pay%' or actionId like 'payDom%')
            and user_id > '0'
            and platform = '6'
-           AND server_time_fmt between '${start_date}' and '${end_date}'
+           AND server_time_fmt between ${start_date} and ${end_date}
          group by
              user_id
                 ,actionId
@@ -477,7 +477,7 @@ select
     count(1)
      ,user_id
      ,substring(date_add(server_time_fmt,interval 8 hour),1,10) as dt
-     ,data9
+#      ,data9
 from studyx_big_log.user_buried_point_log ubpl
 where event = 'pv'
   and pageId1 like 'matching_details%'
@@ -485,9 +485,9 @@ where event = 'pv'
   and actionData = 'succeeded'
   and user_id > '0'
   and platform = '6'
-  AND server_time_fmt between '${start_date}' and '${end_date}'
+  AND server_time_fmt between ${start_date} and ${end_date}
 group by
     substring(date_add(server_time_fmt,interval 8 hour),1,10)
-       ,data9
+#        ,data9
        ,user_id
 ;
