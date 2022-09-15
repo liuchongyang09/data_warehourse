@@ -313,3 +313,7 @@ left join
 on ifnull(tab1.user_id_pay,tab1.user_id_anwser) = tab2.user_id
 and tab2.reg_type is not null
 ;
+
+/*
+测试
+ */
