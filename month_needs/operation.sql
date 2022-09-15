@@ -210,108 +210,135 @@ group by
  */
 
 select
-user_id_anwser  -- 答题用户
-,user_id_pay    -- 付费用户
-,cnt            -- 答题次数
-,pay_cnt        -- 支付次数
-,points_type    -- points充值
-,member_type    -- 会员订阅充值
-,tab2.CreateDatetime -- 注册时间
-,reg_type            -- 注册来源
+    user_id_anwser      -- 答题用户
+     , user_id_pay         -- 付费用户
+     , cnt                 -- 答题次数
+     , pay_cnt             -- 支付次数
+     , points_type         -- points充值
+     , member_type         -- 会员订阅充值
+     ,b.create_time        -- 首次付费时间
+     , a.CreateDatetime -- 注册时间
+     , reg_type            -- 注册来源
 from (
-         select a.user_id as user_id_anwser-- 答题用户
-              , b.user_id as user_id_pay -- 付费用户
-              , cnt
-              , pay_cnt
-              , points_type
-              , member_type
+         select user_id_anwser      -- 答题用户
+              , user_id_pay         -- 付费用户
+              , cnt                 -- 答题次数
+              , pay_cnt             -- 支付次数
+              , points_type         -- points充值
+              , member_type         -- 会员订阅充值
+              , tab2.CreateDatetime -- 注册时间
+              , reg_type            -- 注册来源
          from (
-                  select
-#        count(1) -- 答题成功
-                      count(1) cnt
+                  select a.user_id as user_id_anwser-- 答题用户
+                       , b.user_id as user_id_pay   -- 付费用户
+                       , cnt
+                       , pay_cnt
+                       , points_type
+                       , member_type
+                  from (
+                           select
+                               count(1) cnt
+                                , b.user_id
+                                , a.p_user_id
+                           from studyx_briliansolution6.t_submit_answer_history a
+                                    left join studyx_briliansolution6.p_student b
+                                              on a.p_user_id = b.UserGuid
+                           where answer_type = 0
+                             and a.create_time between ${start_date} and ${end_date}
+                           group by b.user_id
+                                  , a.p_user_id
+                       ) a
+                           left join
+                       (
+                           select count(1)                                           as pay_cnt -- 支付次数
+                                , b.user_id
+                                , sum(case when a.type = 1 then recharge_amount end) as points_type
+                                , sum(case when a.type = 2 then recharge_amount end) as member_type
+
+                           from studyx_briliansolution6.p_recharge_log a
+                                    left join studyx_briliansolution6.p_student b
+                                              on a.p_user_id = b.UserGuid
+                           where a.create_time between ${start_time} and ${end_time}
+                             and status = 'COMPLETE'
+                           group by b.user_id
+                       ) b
+                       on a.user_id = b.user_id
+                  union
+                  select a.user_id
                        , b.user_id
-                       , a.p_user_id
-                  from studyx_briliansolution6.t_submit_answer_history a
-                           left join studyx_briliansolution6.p_student b
-                                     on a.p_user_id = b.UserGuid
-                  where answer_type = 0
-                    and a.create_time between ${start_date} and ${end_date}
-                  group by b.user_id
-                         , a.p_user_id
-              ) a
+                       , cnt
+                       , pay_cnt
+                       , points_type
+                       , member_type
+                  from (
+                           select
+#        count(1) -- 答题成功
+                               count(1) cnt
+                                , b.user_id
+                                , a.p_user_id
+                           from studyx_briliansolution6.t_submit_answer_history a
+                                    left join studyx_briliansolution6.p_student b
+                                              on a.p_user_id = b.UserGuid
+                           where answer_type = 0
+                             and a.create_time between ${start_date} and ${end_date}
+                           group by b.user_id
+                                  , a.p_user_id
+                       ) a
+                           right join
+                       (
+                           select count(1)                                           as pay_cnt -- 支付次数
+                                , b.user_id
+                                , sum(case when a.type = 1 then recharge_amount end) as points_type
+                                , sum(case when a.type = 2 then recharge_amount end) as member_type
+
+                           from studyx_briliansolution6.p_recharge_log a
+                                    left join studyx_briliansolution6.p_student b
+                                              on a.p_user_id = b.UserGuid
+                           where a.create_time between ${start_time} and ${end_time}
+                             and status = 'COMPLETE'
+                           group by b.user_id
+                       ) b
+                       on a.user_id = b.user_id
+              ) tab1
                   left join
               (
-                  select count(1)             as pay_cnt -- 支付次数
-                       , b.user_id
-                       , sum(case when a.type = 1 then recharge_amount end) as points_type
-                       ,sum(case  when a.type = 2 then recharge_amount end) as  member_type
-
-                  from studyx_briliansolution6.p_recharge_log a
-                           left join studyx_briliansolution6.p_student b
-                                     on a.p_user_id = b.UserGuid
-                  where a.create_time between ${start_time} and ${end_time}
-                  group by b.user_id
-              ) b
-              on a.user_id = b.user_id
-         union
-         select a.user_id
-              , b.user_id
-              , cnt
-              , pay_cnt
-              , points_type
-              , member_type
-         from (
-                  select
-#        count(1) -- 答题成功
-                      count(1) cnt
-                       , b.user_id
-                       , a.p_user_id
-                  from studyx_briliansolution6.t_submit_answer_history a
-                           left join studyx_briliansolution6.p_student b
-                                     on a.p_user_id = b.UserGuid
-                  where answer_type = 0
-                    and a.create_time between ${start_date} and ${end_date}
-                  group by b.user_id
-                         , a.p_user_id
-              ) a
-                  right join
-              (
-                  select count(1)             as pay_cnt -- 支付次数
-                       , b.user_id
-                       , sum(case when a.type = 1 then recharge_amount end) as points_type
-                       ,sum(case  when a.type = 2 then recharge_amount end) as  member_type
-
-                  from studyx_briliansolution6.p_recharge_log a
-                           left join studyx_briliansolution6.p_student b
-                                     on a.p_user_id = b.UserGuid
-                  where a.create_time between ${start_time} and ${end_time}
-                  group by b.user_id
-              ) b
-              on a.user_id = b.user_id
-     )tab1
+                  select case
+                             when t.platform != 'robot' and t.channel_code IN
+                                                            (SELECT DISTINCT invite_code
+                                                             FROM studyx_briliansolution6.channel_config)
+                                 AND (t.dc_code is null or t.dc_code = '')
+                                 then 'dc注册'
+                             when t.platform != 'robot' and channel_code is not null
+                                 and channel_code != ''
+                                 and
+                                  channel_code not in (select invite_code from studyx_briliansolution6.channel_config)
+                                 and (dc_code is null or dc_code = '')
+                                 then '用户邀请注册'
+                             when t.platform != 'robot' and (t.channel_code is null or t.channel_code = '') and
+                                  dc_code is null
+                                 then '用户自行注册'
+                             when dc_code is not null AND t.platform != 'robot'
+                                 then 'suite注册' end as reg_type
+                       , t.user_id
+                       , u.CreateDatetime
+                  FROM studyx_briliansolution6.p_student t
+                           LEFT JOIN studyx_briliansolution6.p_user u ON t.UserGuid = u.UserGuid
+              ) tab2
+              on ifnull(tab1.user_id_pay, tab1.user_id_anwser) = tab2.user_id
+                  and tab2.reg_type is not null
+     ) a
 left join
-     (
-         select case
-                          when t.platform != 'robot' and t.channel_code IN
-                                          (SELECT DISTINCT invite_code FROM studyx_briliansolution6.channel_config)
-                                          AND (t.dc_code is null or t.dc_code = '')
-                              then 'dc注册'
-                          when t.platform != 'robot' and channel_code is not null
-                                          and channel_code != ''
-                                          and channel_code not in (select invite_code from studyx_briliansolution6.channel_config)
-                                          and (dc_code is null or dc_code = '')
-                              then '用户邀请注册'
-                          when t.platform != 'robot' and (t.channel_code is null or t.channel_code = '') and dc_code is null
-                              then '用户自行注册'
-                          when dc_code is not null AND t.platform != 'robot'
-                              then 'suite注册' end as reg_type
-              , t.user_id
-              , u.CreateDatetime
-         FROM studyx_briliansolution6.p_student t
-                  LEFT JOIN studyx_briliansolution6.p_user u ON t.UserGuid = u.UserGuid
-     )tab2
-on ifnull(tab1.user_id_pay,tab1.user_id_anwser) = tab2.user_id
-and tab2.reg_type is not null
+ (
+     select
+         b.user_id,a.create_time
+     from studyx_briliansolution6.p_recharge_log a
+              left join studyx_briliansolution6.p_student b
+                        on a.p_user_id = b.UserGuid
+     where a.create_time between ${start_time} and ${end_time}
+       and status = 'COMPLETE'
+     group by b.user_id
+     ) b
+on a.user_id_pay = b.user_id
 ;
 
 /*
