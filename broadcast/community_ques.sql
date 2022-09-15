@@ -58,3 +58,8 @@ where answer_status=2
   and subject_id=2002
   and create_time between ${start_date} and ${end_date}
 ;
+#------------------------------
+/*
+ 1.用户发布题目到社区记录：q_community_question
+ 2.用户回答社区题目记录 ： q_community_answer
+ */
