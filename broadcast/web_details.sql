@@ -352,3 +352,141 @@ where `event` = 'click'
   AND server_time_fmt between '${start_date}' and '${end_date}'
 group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
        , data9
+;
+/*
+ 点击搜索按钮后未解锁的用户
+ */
+select
+    0
+     ,concat(tab1.user_id,'-','not click see answer')      -- 没有点击see answer的用户
+     ,tab1.ip
+     ,tab1.pageId1
+from (
+         select user_Id,
+                ip,
+                pageId1
+         from studyx_big_log.user_buried_point_log
+         where server_time_fmt between ${start_time} and ${end_time}
+           and pageId1 like 'matching_results%'
+           and event = 'Exposure'
+           and actionId = 'search'
+         group by user_Id,
+                  ip,
+                  pageId1
+     )tab1    -- 所有点击搜索按钮的行为
+         left join
+     (
+         select user_id,
+                ip
+         from studyx_big_log.user_buried_point_log
+         where pageId1 LIKE '%matching_results%'
+           and `event` = 'click'
+           and actionId like '%View Answer%'
+           and server_time_fmt between ${start_time} and ${end_time}
+         group by user_id, ip
+     )tab2   -- 点击see answer的ip
+     on tab1.ip = tab2.ip
+where tab2.ip is null
+union
+select
+    1
+     ,concat(tab3.user_id,'-','not click unlock the answer')      -- 没有点击解锁按钮的用户
+     ,tab3.ip
+     ,tab3.pageId1
+from (
+         select user_Id,
+                ip,
+                pageId1
+         from studyx_big_log.user_buried_point_log
+         where server_time_fmt between ${start_time} and ${end_time}
+           and pageId1 like 'matching_results%'
+           and event = 'Exposure'
+           and actionId = 'search'
+         group by user_Id,
+                  ip,
+                  pageId1
+     )tab3    -- 所有点击搜索按钮的行为
+         left join
+     (
+         select user_id,
+                ip
+         from studyx_big_log.user_buried_point_log
+         where server_time_fmt between ${start_time} and ${end_time}
+           and `event` = 'click'
+           and pageId1 LIKE '%matching_details%'
+           and (actionId like '%Confirm2-%' or actionId like '%unlock the answer-%')
+         group by user_id, ip
+     )tab4  -- 点击解锁按钮但不一定解锁成功
+     on tab3.ip = tab4.ip
+where tab4.ip is null
+;
+/*
+ 点击解锁按钮次数/点击搜索按钮次数
+ */
+select
+    lon_in_cnt
+     , unlog_in_cnt
+     ,click_search_cnt
+     ,(lon_in_cnt + unlog_in_cnt)/click_search_cnt
+from (
+         select count(case
+                          when pageId1 like 'matching_results%'
+                              and event = 'Exposure'
+                              and actionId = 'search' then 1 end)                                   as click_search_cnt -- 点击搜索按钮的次数
+              , count(case
+                          when pageId1 LIKE 'matching_details%'
+                              and event = 'click'
+                              and user_id is not null
+                              and user_id > 0
+                              and actionId = 'Unlock the answer'
+                              then concat(user_id, pageId1) end)                                    as lon_in_cnt       -- 登录用户点击解锁次数
+              , count(case
+                          when pageId1 LIKE 'matching_details%'
+                              and event = 'click'
+                              and user_id = 0
+                              and actionId = 'Unlock the answer'
+                              then concat(ip, pageId1) end)                                         as unlog_in_cnt     -- 未登录用户点击次数
+         from studyx_big_log.user_buried_point_log
+         where server_time_fmt between ${start_time} and ${end_time}
+     )a
+;
+/*
+ 解锁成功用户首次解锁时间和所属服务器
+ */
+select
+    a.user_id
+     ,a.server_time_fmt
+     ,b.data9
+from
+    (
+        select user_id
+             , server_time_fmt
+        FROM studyx_big_log.user_buried_point_log
+        WHERE `event` = 'click'
+          AND pageId1 LIKE '%matching_details%'
+          and actionId = 'Confirm2-1'
+          and platform  = 6
+          and user_id != '0'
+          and user_id != ''
+          and user_id is not null
+          AND server_time_fmt between ${start_date} and ${end_date}
+        group by user_id
+    )a
+        left join
+    (
+        select
+            user_id
+             ,data9
+        from
+            studyx_big_log.user_buried_point_log
+        where server_time_fmt between ${start_date} and ${end_date}
+          and user_id is not null
+          and user_id != 0
+          and user_id >0
+        group by user_id,substring(server_time_fmt,1,4)
+        order by server_time_fmt desc
+
+    )b
+    on a.user_id = b.user_id
+where a.user_id is not null
+;
