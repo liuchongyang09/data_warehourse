@@ -206,6 +206,20 @@ group by
                     when service_id = '951370203940401162' then 'Homework Q&A' end
 ;
 /*
+ StudyX homework help 活跃人数
+ */
+select
+    count(distinct user_id)
+     ,substring(date_add(server_time_fmt,interval 8 hour),1,10) dt
+from studyx_big_log.user_buried_point_log
+where  user_id > '0'
+  and user_id is not null
+  and user_id != 0
+  and client_type = '6'
+  AND server_time_fmt between ${start_date} and ${end_date}
+group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
+;
+/*
  运营所需数据
  */
 

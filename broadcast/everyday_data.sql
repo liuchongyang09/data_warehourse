@@ -357,6 +357,10 @@ group by
        ,data9
 ;
 -- 4. 点击Pay Now按钮的次数。
+/*
+9月3号开始新的埋点记录 actionId= 'pay_succeeded',
+历史计算逻辑 actionid = 'pay'，actionData = 'succeeded'
+ */
 select
     count(1)
      ,user_id
