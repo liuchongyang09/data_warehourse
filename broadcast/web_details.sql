@@ -490,3 +490,13 @@ from
     on a.user_id = b.user_id
 where a.user_id is not null
 ;
+
+select
+        count(distinct substring_index(substring_index(pageId1,'es=',-1),'#',1))  -- 搜索结果解锁按钮点击次数
+from studyx_big_log.user_buried_point_log
+where event = 'click'
+  and actionId = 'Unlock the answer'
+  and platform = '6'
+  and pageId1 like '%es=%'
+  and server_time_fmt between ${start_date} and ${end_date}
+;

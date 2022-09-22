@@ -1,62 +1,69 @@
-#--------------------------------------------------
--- 社区新增题目
-#用户自主发布
 SELECT
-    count(1)
-FROM studyx_briliansolution6.`q_community_question`
-where push_type=0  -- 1：机器人，0：真实用户,2:用户搜索机器人发布
--- and subject_id=2000 -- 学科id
-  and  create_time between  ${start_date} and ${end_date}
+    count(case when push_type in (0,3) then 1 end) as use_num          -- 用户自主发布
+     ,count(case when push_type in (1,2)   then 1 end) as feilun_num   -- 飞轮未实时抓取发布
+     ,count(case when answer_status = 2 then 1 end)    as out_num   -- 学科团队下架数量
+     ,count(case when answer_status = 1 and answer_type = 4 then 1 end) as expert_num   -- expert答题
+     ,count(case when push_type in (0,3) and answer_status = 1 and answer_type = 2 then 1 end) as consol_num  -- 控台答题
+     ,count(case when push_type in (1,2) and answer_status = 1 and answer_type = 2 then 1 end) as consol_carry_num  -- 控台搬运
+     ,count(case when push_type in (0,3) and answer_status = 0 then 1 end) as unsolved_use_num        -- 计算累计用户发布未解答
+     ,count(case when push_type in (1,2) and answer_status = 0 then 1 end) as unsolved_feilun_num     -- 计算累计飞轮发布未解答
+     ,subject_id
+     ,CategoryName
+FROM studyx_briliansolution6.`q_community_question` a
+         left join studyx_briliansolution6.q_category b
+                   on a.subject_id = b.CategoryId
+where -- push_type=0  -- 1：机器人，0：真实用户,2:用户搜索机器人发布
+      create_time between  ${start_date} and ${end_date}
+group by subject_id,CategoryName
 
 ;
-#飞轮发布
-SELECT count(1)
-FROM studyx_briliansolution6.`q_community_question`
-where (push_type=1 or push_type=2)
--- and subject_id=2000
-  and create_time between ${start_date} and ${end_date}
+select
+    count(distinct case when push_type in (0,3) then   p_user_id end) as cnt -- 有提问行为用户数
+from studyx_briliansolution6.`q_community_question`
+where  create_time between  ${start_date} and ${end_date}
 ;
-#-----------------------------------------------------
--- 社区题目搬运情况
-#飞轮采集
-select count(1)
-from studyx_briliansolution6.t_submit_answer_history
-where answer_type=1
--- and subject_id=2000
-  and  create_time between ${start_date} and ${end_date}
-;
-#用户自主答题
-select count(1)
-from studyx_briliansolution6.t_submit_answer_history
-where  answer_type=0
--- and subject_id=2003
-  and  create_time between ${start_date} and ${end_date}
-;
-#学科团队搬运
-select count(1)
-from studyx_briliansolution6.t_submit_answer_history
-where  answer_type=2
--- and subject_id=2000
-  and  create_time between ${start_date} and ${end_date}
-;
-#--------------------------------------------------------
 
-#学科团队再前端操作回答
-select count(1)
-from studyx_briliansolution6.t_submit_answer_history
-where (p_user_id='83baad17-49f7-481b-91a8-2584c2b07d4f' or p_user_id='1517080938348154880' or p_user_id='1517099048216170496' or p_user_id='dee4001a-1aa8-4971-9992-083e84f61a84')
-  and answer_type=0
--- and subject_id=2000
-  and  create_time between ${start_date} and ${end_date}
+select
+    count(distinct p_user_id)   -- 有答题行为导师数
+from studyx_briliansolution6.q_community_answer
+where role = 20
+  and create_time between  ${start_date} and ${end_date}
 ;
-#----------------------------------------
--- 下架题目
-#学科团队下架
-SELECT count(1)
-FROM studyx_briliansolution6.`q_community_question`
-where answer_status=2
-  and subject_id=2002
-  and create_time between ${start_date} and ${end_date}
+
+
+
+select
+    count(distinct a.p_user_id)  -- 用户主动答题
+     ,b.subject_id
+     ,c.CategoryName
+from studyx_briliansolution6.q_community_answer a
+         left join studyx_briliansolution6.q_community_question b
+                   on a.community_id = b.id
+         left join studyx_briliansolution6.q_category c
+                   on b.subject_id = c.CategoryId
+where
+    a.create_time between  ${start_date} and ${end_date}
+  and role !=''
+  and role != 10
+group by
+    b.subject_id
+       ,c.CategoryName
+;
+select
+    count(case when m_evaluation_num is not null then 1 end) as  check_num-- 已审核数
+     ,count(case when m_evaluation_num is null and ifnull(evaluation_num,0) < 4 then 1 end)        un_check_num-- 待审核数
+     ,count(case when m_evaluation_num is not null and evaluation_num = m_evaluation_num then 1 end)   eff_check_num-- 有效审核
+     ,count(case when m_evaluation_num is not null and evaluation_num != m_evaluation_num then 1 end) invalid_check_num-- 无效审核
+from studyx_briliansolution6.q_community_answer
+where create_time between  ${start_date} and ${end_date}
+;
+
+SELECT
+    COUNT(distinct question_id)  -- 累计含答案的学习内容数
+FROM
+    studyx_briliansolution6.t_question_to_solution
+WHERE
+    question_id IS NOT NULL
 ;
 #------------------------------
 /*

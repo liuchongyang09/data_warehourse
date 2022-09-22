@@ -464,3 +464,45 @@ from
     )tab2
     on ifnull(tab1.user_id,tab5.user_id) = tab2.user_id
 ;
+/*
+ 解锁成功用户、首次解锁成功时间、最后一次点击行为所属服务器
+ */
+
+select
+    a.user_id           -- 解锁成功用户
+     ,a.server_time_fmt  -- 首次解锁时间
+     ,b.data9            -- 用户最后一次点击行为所属的服务器
+from (
+         select user_id   -- 解锁成功用户
+              , server_time_fmt
+         FROM studyx_big_log.user_buried_point_log
+         WHERE `event` = 'click'
+           AND (pageId1 like 'matching_details%' or pageId1 like 'search_result%')
+           and actionId = 'Confirm2-1'
+-- and platform  = 6
+           and user_id != '0'
+           and user_id != ''
+           and user_id is not null
+           AND server_time_fmt between ${start_date} and ${end_date}
+         group by user_id
+     )a
+         left join
+     (
+         select
+             user_id,server_time_fmt,data9  -- 用户最后一次点击行为所属的服务器
+         from (
+                  select user_id,
+                         server_time_fmt,
+                         data9
+                  from studyx_big_log.user_buried_point_log
+                  where server_time_fmt between ${start_date} and ${end_date}
+                    and user_id != '0'
+                    and user_id != ''
+                    and user_id is not null
+                  group by user_id, server_time_fmt
+                  order by server_time_fmt desc
+              ) A
+         group by user_id
+     )b
+     on a.user_id = b.user_id
+;
