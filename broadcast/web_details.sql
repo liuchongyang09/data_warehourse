@@ -358,12 +358,13 @@ group by substring(date_add(server_time_fmt,interval 8 hour),1,10)
  */
 select
     0
-     ,concat(tab1.user_id,'-','not click see answer')      -- 没有点击see answer的用户
-     ,tab1.ip
-     ,tab1.pageId1
+     ,data10
+#      ,tab1.user_id
+     ,concat('https://www.studyxapp.com/home/',replace(tab1.pageId1,'matching_','matching-'))
 from (
          select user_Id,
                 ip,
+                data10,
                 pageId1
          from studyx_big_log.user_buried_point_log
          where server_time_fmt between ${start_time} and ${end_time}
@@ -372,6 +373,7 @@ from (
            and actionId = 'search'
          group by user_Id,
                   ip,
+                  data10,
                   pageId1
      )tab1    -- 所有点击搜索按钮的行为
          left join
@@ -384,18 +386,19 @@ from (
            and actionId like '%View Answer%'
            and server_time_fmt between ${start_time} and ${end_time}
          group by user_id, ip
-     )tab2   -- 点击see answer的ip
+     )tab2   -- 点击see answer的用户
      on tab1.ip = tab2.ip
 where tab2.ip is null
 union
 select
     1
-     ,concat(tab3.user_id,'-','not click unlock the answer')      -- 没有点击解锁按钮的用户
-     ,tab3.ip
-     ,tab3.pageId1
+     ,data10
+#      ,tab3.user_id
+     ,concat('https://www.studyxapp.com/home/',replace(tab3.pageId1,'matching_','matching-'))
 from (
          select user_Id,
                 ip,
+                data10,
                 pageId1
          from studyx_big_log.user_buried_point_log
          where server_time_fmt between ${start_time} and ${end_time}
@@ -404,6 +407,7 @@ from (
            and actionId = 'search'
          group by user_Id,
                   ip,
+                  data10,
                   pageId1
      )tab3    -- 所有点击搜索按钮的行为
          left join
@@ -420,6 +424,7 @@ from (
      on tab3.ip = tab4.ip
 where tab4.ip is null
 ;
+
 /*
  点击解锁按钮次数/点击搜索按钮次数
  */

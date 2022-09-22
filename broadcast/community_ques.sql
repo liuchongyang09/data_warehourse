@@ -5,7 +5,6 @@ SELECT
      ,count(case when answer_status = 1 and answer_type = 4 then 1 end) as expert_num   -- expert答题
      ,count(case when push_type in (0,3) and answer_status = 1 and answer_type = 2 then 1 end) as consol_num  -- 控台答题
      ,count(case when push_type in (1,2) and answer_status = 1 and answer_type = 2 then 1 end) as consol_carry_num  -- 控台搬运
-     ,count(case when push_type in (0,3) and answer_status = 0 then 1 end) as unsolved_use_num        -- 计算累计用户发布未解答
      ,count(case when push_type in (1,2) and answer_status = 0 then 1 end) as unsolved_feilun_num     -- 计算累计飞轮发布未解答
      ,subject_id
      ,CategoryName
@@ -15,7 +14,18 @@ FROM studyx_briliansolution6.`q_community_question` a
 where -- push_type=0  -- 1：机器人，0：真实用户,2:用户搜索机器人发布
       create_time between  ${start_date} and ${end_date}
 group by subject_id,CategoryName
-
+;
+SELECT
+        count(case when push_type in (0,3) and answer_status = 0 then 1 end) as unsolved_use_num        -- 计算累计用户发布未解答
+        ,count(case when push_type in (1,2) and answer_status = 0 then 1 end) as unsolved_feilun_num     -- 计算累计飞轮发布未解答
+     ,subject_id
+     ,CategoryName
+FROM studyx_briliansolution6.`q_community_history` a
+         left join studyx_briliansolution6.q_category b
+                   on a.subject_id = b.CategoryId
+     -- push_type=0  -- 1：机器人，0：真实用户,2:用户搜索机器人发布
+#          where   create_time <= ${end_date}
+group by subject_id,CategoryName
 ;
 select
     count(distinct case when push_type in (0,3) then   p_user_id end) as cnt -- 有提问行为用户数

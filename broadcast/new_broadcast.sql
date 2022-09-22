@@ -138,12 +138,17 @@ group by data9
  dc搜题次数  统计时间：北京时间
  */
 select
-    count(1) as a  -- 总的搜题次数
-     ,count(case when (ifnull(que_text,'')!=''or ifnull(que_img,'')!='') then 1 end) as b  -- 有效搜题次数
-     ,count(case when (ifnull(que_text,'') =''and ifnull(que_img,'') ='') then 1 end) as c -- 无效搜题次数
-     ,count(case when type = '1' then 1 end) as suc_cnt                                    -- 成功给用户发送私信的次数（type = 1 ：获取答案）
-from studyx_discord_db.t_search_bot_re_an
-where create_time between ${start_date} and ${end_date}
+    total_cnt    -- 搜题次数
+     ,total_cnt - invaild_cnt -- 有效搜题
+     ,invaild_cnt -- 无效搜题
+     ,suc_cnt -- 成功发送私信次数
+from (
+         select count(1)                               as total_cnt
+              , count(case when type = '0' then 1 end) as invaild_cnt -- 无效搜题次数
+              , count(case when type = '1' then 1 end) as suc_cnt
+         from studyx_discord_db.t_search_bot_re_an
+         where create_time between ${start_date} and ${end_date}
+     )a
 ;
 
 /*
