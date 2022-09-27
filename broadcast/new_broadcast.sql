@@ -224,16 +224,14 @@ group by
  客户端付费情况
  */
 select
-    count(1)         -- 客户端付费次数
-     ,count(distinct user_id) -- 付费人数
-     ,sum(data1)              -- 付费金额
-     ,platform               -- 2:ios,3:Android
-from studyx_big_log.user_buried_point_log
-where event = 'click'
-  and actionId = 'Points pay'
-  and actionData = 'success'
-  and platform in ('3','2')
-  and client_type = '2'
-  and server_time_fmt between ${start_date} and ${end_date}
-group by platform
+    count(1)  -- 支付次数
+     ,count(distinct b.user_id) -- 支付人数
+     ,sum(recharge_amount)      -- 支付金额
+     ,pay_type                  -- 支付类型（1：ios，3：Android，4：web）
+from studyx_briliansolution6.p_recharge_log a
+         left join studyx_briliansolution6.p_student b
+                   on a.p_user_id = b.UserGuid
+where status = 'COMPLETE'
+  AND a.create_time between ${start_date} and ${end_date}
+group by pay_type
 ;
