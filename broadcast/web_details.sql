@@ -423,6 +423,40 @@ from (
      )tab4  -- 点击解锁按钮但不一定解锁成功
      on tab3.ip = tab4.ip
 where tab4.ip is null
+union
+select
+    2
+     ,data10
+#      ,tab3.user_id
+     ,concat('https://www.studyxapp.com/home/',replace(tab3.pageId1,'matching_','matching-'))
+from (
+         select user_Id,
+                ip,
+                data10,
+                pageId1
+         from studyx_big_log.user_buried_point_log
+         where server_time_fmt between ${start_time} and ${end_time}
+           and pageId1 like 'matching_results%'
+           and event = 'Exposure'
+           and actionId = 'search'
+         group by user_Id,
+                  ip,
+                  data10,
+                  pageId1
+     )tab5    -- 所有点击搜索按钮的行为
+         left join
+     (
+         select user_id,
+                ip
+         from studyx_big_log.user_buried_point_log
+         where server_time_fmt between ${start_time} and ${end_time}
+           and `event` = 'click'
+           and pageId1 LIKE '%matching_details%'
+           and (actionId like '%Confirm2-%' or actionId like '%unlock the answer-%')
+         group by user_id, ip
+     )tab6  -- 点击解锁按钮但不一定解锁成功
+     on tab6.ip = tab5.ip
+where tab6.ip is not null
 ;
 
 /*
