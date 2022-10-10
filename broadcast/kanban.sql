@@ -81,3 +81,50 @@ from studyx_briliansolution6.p_student t
                    on t.UserGuid = d.p_user_id
 group by ifnull(server_type,0)
 ;
+/*
+
+ */
+select
+    0
+     ,count(distinct user_id)
+     ,''
+     ,count(distinct case when pageId1 like 'matching_results%'
+    and event = 'Exposure'
+    and actionId = 'search' then user_id end) as search_num -- 每日搜题行为账号数
+     ,count(distinct case when `event` = 'click'
+    and pageId1 LIKE '%matching_details%'
+    and (actionId like '%Confirm2-%' or actionId like '%unlock the answer-%') then user_id end)  as unlock_num  -- 每日解锁行为账号数
+     ,''
+     ,count(case when pageId1 like 'matching_results%'
+    and event = 'Exposure'
+    and actionId = 'search' then 1 end) as search_cnt  -- 每日搜索次数
+     ,count( case when `event` = 'click'
+    and pageId1 LIKE '%matching_details%'
+    and (actionId like '%Confirm2-%' or actionId like '%unlock the answer-%') then 1 end)  as unlock_cnt  -- 每日解锁按钮点击次数
+     ,count(case when `event` = 'click'
+    AND pageId1 LIKE '%matching_details%'
+    and actionId = 'Confirm2-1' then 1 end) as succ_unlock_cnt -- 每日成功解锁次数
+     ,''
+     ,''
+     ,''
+     ,''
+     ,''
+     ,count(distinct case when event = 'click'
+    and actionId = 'Unlock the answer'
+    and platform = '6'
+    and pageId1 like '%es=%' then substring_index(substring_index(pageId1,'es=',-1),'#',1) end)/
+      count(case when pageId1 like 'matching_results%' and event = 'Exposure' and actionId = 'search' then 1 end) as search_rate   -- 搜题解锁率
+     ,count(case when `event` = 'click'
+    AND pageId1 LIKE '%matching_details%'
+    and actionId = 'Confirm2-1' then 1 end)/
+      count(case when pageId1 like 'matching_results%'and event = 'Exposure'and actionId = 'search' then 1 end) as unlock_succ_rate -- 搜题解锁成功率
+     ,ifnull(data9,0)
+     ,substring(date_add(server_time_fmt,interval 8 hour),1,10) data_time
+     ,from_unixtime(unix_timestamp(now())) create_time
+from studyx_big_log.user_buried_point_log
+where  server_time_fmt < ${end_time}
+  and server_time_fmt >= ${start_time}
+group by
+    ifnull(data9,0)
+       ,substring(date_add(server_time_fmt,interval 8 hour),1,10)
+;
