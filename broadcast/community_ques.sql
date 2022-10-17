@@ -63,7 +63,7 @@ select
     count(case when m_evaluation_num is not null then 1 end) as  check_num-- 已审核数
      ,count(case when m_evaluation_num is null and ifnull(evaluation_num,0) < 4 then 1 end)        un_check_num-- 待审核数
      ,count(case when m_evaluation_num is not null and evaluation_num = m_evaluation_num then 1 end)   eff_check_num-- 有效审核
-     ,count(case when m_evaluation_num is not null and evaluation_num != m_evaluation_num then 1 end) invalid_check_num-- 无效审核
+     ,count(case when m_evaluation_num is not null and ifnull(evaluation_num,0) != m_evaluation_num then 1 end) invalid_check_num-- 无效审核
 from studyx_briliansolution6.q_community_answer
 where create_time between  ${start_date} and ${end_date}
 ;

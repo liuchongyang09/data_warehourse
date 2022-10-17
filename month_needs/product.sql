@@ -177,3 +177,117 @@ from (
      )b
      on a.invite_code = b.channel_code
 where b.user_id is not null and  a.user_id is not null
+;
+
+select
+    tab1.user_id
+     ,tab1.create_time
+     ,tab1.snap_questions
+     ,ifnull(tab2.cnt,0)
+     ,tab1.ask_community
+     ,ifnull(tab4.ct,0)
+     ,case when tab3.user_id is null then '否' else '是' end as is_pay
+     ,ifnull(tab1.server_type,0)
+from (
+         select b.user_id -- 消耗points用户
+              , b.create_time
+              , c.server_type
+              , sum(case when info_type = 'snap_questions' then points_num else 0 end) as snap_questions
+              , sum(case when info_type = 'ask_community' then points_num else 0 end)  as ask_community
+         from studyx_briliansolution6.p_points_detatiled a
+                  left join studyx_briliansolution6.p_student b
+                            on a.p_user_id = b.UserGuid
+                  left join studyx_briliansolution6.p_user c
+                            on b.UserGuid = c.UserGuid
+         where info_status = '0'
+           and a.info_type in ('snap_questions', 'ask_community')
+           and a.create_time between ${start_date} and ${end_date}
+         group by b.user_id, b.create_time
+     )tab1
+         left join (
+    select b.user_id
+         , count(1) cnt
+    from studyx_briliansolution6.`q_community_question` a
+             left join studyx_briliansolution6.p_student b
+                       on a.p_user_id = b.UserGuid
+    where a.create_time between ${start_date} and ${end_date}
+      and push_type in (0, 3)
+    group by b.user_id
+)tab2
+                   on tab1.user_id = tab2.user_id
+         left join (
+    select distinct b.user_id
+    from studyx_briliansolution6.p_recharge_log a
+             left join studyx_briliansolution6.p_student b
+                       on a.p_user_id = b.UserGuid
+    where a.create_time between ${start_date} and ${end_date}
+      and a.status = 'COMPLETE'
+)tab3
+                   on tab1.user_id = tab3.user_id
+         left join (
+    select a.user_id
+         , invite_code
+         , count(a.user_id) ct
+    from (
+             select t.user_id   -- 所有用户
+                  , invite_code -- 个人邀请码
+             FROM studyx_briliansolution6.p_student t
+                      LEFT JOIN studyx_briliansolution6.p_user u ON t.UserGuid = u.UserGuid
+             WHERE t.platform != 'robot'
+         ) a
+             right join
+         (
+             select u.CreateDatetime
+                  , t.user_id -- 被邀请注册
+                  , channel_code
+                  , substring(date_add(u.CreateDatetime, interval 8 hour), 1, 10) as dt
+             FROM studyx_briliansolution6.p_student t
+                      LEFT JOIN studyx_briliansolution6.p_user u ON t.UserGuid = u.UserGuid
+             WHERE t.platform != 'robot'
+               and channel_code is not null
+               and channel_code != ''
+               and channel_code not in (select invite_code from studyx_briliansolution6.channel_config)
+               and (dc_code is null or dc_code = '') -- 用户邀请注册
+         ) b
+         on a.invite_code = b.channel_code
+    where a.user_id is not null and b.user_id is not null
+    group by invite_code
+           , a.user_id
+)tab4
+                   on tab1.user_id = tab4.user_id
+
+;
+## 计算有付费或者发布题目 但是没有points消耗
+select
+    tab2.user_id
+     ,tab2.create_time
+     ,tab2.server_type
+from (
+         select b.user_id -- 消耗points用户
+              , b.create_time
+              , c.server_type
+              , sum(case when info_type = 'snap_questions' then points_num else 0 end) as snap_questions
+              , sum(case when info_type = 'ask_community' then points_num else 0 end)  as ask_community
+         from studyx_briliansolution6.p_points_detatiled a
+                  left join studyx_briliansolution6.p_student b
+                            on a.p_user_id = b.UserGuid
+                  left join studyx_briliansolution6.p_user c
+                            on b.UserGuid = c.UserGuid
+         where info_status = '0'
+           and a.info_type in ('snap_questions', 'ask_community')
+           and a.create_time between ${start_date} and ${end_date}
+         group by b.user_id, b.create_time
+     )tab1
+         right join (
+    select distinct b.user_id,b.create_time,c.server_type
+    from studyx_briliansolution6.p_recharge_log a
+             left join studyx_briliansolution6.p_student b
+                       on a.p_user_id = b.UserGuid
+             left join studyx_briliansolution6.p_user c
+                       on b.UserGuid = c.UserGuid
+    where a.create_time between ${start_date} and ${end_date}
+      and a.status = 'COMPLETE'
+)tab2
+                    on tab1.user_id = tab2.user_id
+where tab1.user_id is null
+;
