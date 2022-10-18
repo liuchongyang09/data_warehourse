@@ -42,8 +42,14 @@ where role = 20
 
 
 
+
+/**
+  本月UGC情况
+ */
 select
-    count(distinct a.p_user_id)  -- 用户主动答题
+    count(distinct a.p_user_id) as  answer_usr_cnt  -- 用户主动答题用户数
+     ,count(1)  -- 用户主动答题数
+     ,count(case when (a.evaluation_num > 3 or a.m_evaluation_num > 3) then 1 end) as eff_answer_cnt    -- 有效答题数
      ,b.subject_id
      ,c.CategoryName
 from studyx_briliansolution6.q_community_answer a
@@ -59,6 +65,15 @@ group by
     b.subject_id
        ,c.CategoryName
 ;
+select
+       count(distinct a.p_user_id)   -- 用户主动答题有效用户数
+from studyx_briliansolution6.q_community_answer a
+         left join studyx_briliansolution6.q_community_question b
+                   on a.community_id = b.id
+where (a.role = 20 or a.role = 30)
+  and (a.evaluation_num > 3 or a.m_evaluation_num > 3)
+  and a.create_time between  ${start_date} and ${end_date}
+
 select
     count(case when m_evaluation_num is not null then 1 end) as  check_num-- 已审核数
      ,count(case when m_evaluation_num is null and ifnull(evaluation_num,0) < 4 then 1 end)        un_check_num-- 待审核数
