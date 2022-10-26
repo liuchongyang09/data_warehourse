@@ -235,3 +235,97 @@ where status = 'COMPLETE'
   AND a.create_time between ${start_date} and ${end_date}
 group by pay_type
 ;
+-- -------------------------------------------------------
+/*
+ 统计通过点击搜索按钮后的行为
+ */
+select
+    count(1)  -- 点击搜索按钮的次数  1247
+from studyx_big_log.user_buried_point_log ubpl
+where
+        event = 'Exposure'
+  and pageId1 like '%matching_results?%'
+  and pageId1 not like '%&r%'
+  and actionId = 'search'
+  and platform = '6'
+  and server_time_fmt between ${start_time} and ${end_time}
+;
+select
+    count(distinct data5)   -- CTR次数  750
+from (SELECT
+          substring_index(substring_index(pageId1,'es=',-1),'#',1) as xxx
+           ,actionId,actionData,event,user_id,data5,ip
+      FROM
+          studyx_big_log.user_buried_point_log
+      WHERE
+              `event` = 'pv'
+        AND pageId1 LIKE '%#posId%'
+        AND pageId1 LIKE '%matching_details%'
+        and platform  = 6
+        AND server_time_fmt between ${start_time} and ${end_time}
+     )tab1
+         left join (
+    select
+        distinct  replace(data7,'-','_') as data7
+    from studyx_big_log.user_buried_point_log ubpl
+    where
+            event = 'Exposure'
+      and pageId1 like '%matching_results?%'
+      and pageId1 not like '%&r%'
+      and actionId = 'search'
+      and platform = '6'
+      and server_time_fmt between ${start_time} and ${end_time}
+)tab2
+                   on tab1.xxx = tab2.data7
+where tab2.data7 is not null
+;
+
+select
+    count(1)  -- 点击see full answer次数    1082
+FROM
+    studyx_big_log.user_buried_point_log
+WHERE
+        `event` = 'click'
+  AND pageId1 LIKE '%matching_results%'
+  and actionId like '%View Answer%'
+  and pageId1 not like '%&r%'
+  and platform  = 6
+  AND server_time_fmt between ${start_time} and ${end_time}
+;
+select
+    count(1)  -- 点击unlock the answer次数       664
+     ,count(distinct xxx) -- 搜索结果解锁按钮点击次数 505
+from (
+         SELECT
+             substring_index(substring_index(pageId1,'es=',-1),'#',1) as xxx
+              ,actionId,actionData,event,user_id,data5,ip
+         FROM
+             studyx_big_log.user_buried_point_log
+         WHERE
+                 `event` = 'click'
+           AND pageId1 LIKE '%matching_details%'
+           and pageId1 like '%es=%'
+           and actionId = 'unlock the answer'
+           and platform  = 6
+           AND server_time_fmt between ${start_time} and ${end_time}
+     )tab1
+         left join (
+    select
+        distinct  replace(data7,'-','_') as data7
+    from studyx_big_log.user_buried_point_log ubpl
+    where
+            event = 'Exposure'
+      and pageId1 like '%matching_results?%'
+      and pageId1 not like '%&r%'
+      and actionId = 'search'
+      and platform = '6'
+      and server_time_fmt between ${start_time} and ${end_time}
+)tab2
+                   on tab1.xxx = tab2.data7
+where tab2.data7 is not null
+;
+/*
+ * 通过点击搜索按钮搜索的搜索列表点击率 = CTR次数/点击搜索按钮的次数
+   通过点击搜索按钮搜索的搜索详情页解锁按钮点击率 = 点击unlock the answer次数/点击see full answer次数
+   通过点击搜索按钮搜索的解锁按钮点击率 = 搜索结果解锁按钮点击次数/点击搜索按钮的次数
+/

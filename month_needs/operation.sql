@@ -506,3 +506,82 @@ from (
      )b
      on a.user_id = b.user_id
 ;
+
+/*
+ PC端
+ */
+select
+    count(distinct case when user_id = '0' and event = 'PV'
+        and pageId1 like 'homework_help_%'  then concat(pageId1,ip) end)  un_login_cnt   -- 页面未登录用户访问次数
+     ,count(distinct case when user_id > '0' and event = 'PV'
+    and pageId1 like 'homework_help_%'  then concat(pageId1,ip) end)  login_cnt     -- 页面登录用户访问次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Unlock the answer'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) un_login_unlock_cnt     -- 页面未登录用户unlock点击次数
+     ,count(distinct case when user_id > '0' and event = 'Click'
+    and actionId = 'Unlock the answer'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) login_unlock_cnt        -- 页面登录用户unlock点击次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Submit' and actionData like '%succeeded%'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end)  click_unlock_login_cnt -- 未登录用户点击unlock成功登录次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Sign up' and actionData like '%code%'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) click_unlock_sign_up_cnt  -- 未登录用户点击unlock成功注册次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Submit' and actionData like '%succeeded%'
+    and pageId1 = 'login_' then concat(pageId1,ip) end) click_login_cnt                       -- 页面顶部导航Log in 成功登录次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionData like '%successfully%'
+    and pageId1 = 'register' then concat(pageId1,ip) end) click_reg_cnt                       -- 页面顶部导航Log in 成功注册次数
+     ,count(distinct case when user_id = '0' and event = 'click' and actionId = 'Search searchPopInput'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) click_search_unlogin_cnt  -- 页面搜索框未登陆用户首次点击总次数
+     ,count(distinct case when user_id > '0' and event = 'click' and actionId = 'Search searchPopInput'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) click_search_login_cnt    -- 页面搜索框登陆用户首次点击总次数
+     , substring(date_add(server_time_fmt,interval 8 hour),1,10) dt
+from user_buried_point_log
+where platform = '6'
+  and os_ver not in ('IOS','Android')
+  and server_time_fmt between ${start_date} and ${end_date}
+group by  substring(date_add(server_time_fmt,interval 8 hour),1,10)
+;
+
+/*
+ IOS OR Android
+ */
+select
+    count(distinct case when user_id = '0' and event = 'PV'
+        and pageId1 like 'homework_help_%'  then concat(pageId1,ip) end)  un_login_cnt   -- 页面未登录用户访问次数
+     ,count(distinct case when user_id > '0' and event = 'PV'
+    and pageId1 like 'homework_help_%'  then concat(pageId1,ip) end)  login_cnt     -- 页面登录用户访问次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Unlock the answer'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) un_login_unlock_cnt     -- 页面未登录用户unlock点击次数
+     ,count(distinct case when user_id > '0' and event = 'Click'
+    and actionId = 'Unlock the answer'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) login_unlock_cnt        -- 页面登录用户unlock点击次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Submit' and actionData like '%succeeded%'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end)  click_unlock_login_cnt -- 未登录用户点击unlock成功登录次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Sign up' and actionData like '%code%'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) click_unlock_sign_up_cnt  -- 未登录用户点击unlock成功注册次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionId = 'Submit' and actionData like '%succeeded%'
+    and pageId1 = 'login_' then concat(pageId1,ip) end) click_login_cnt                       -- 页面顶部导航Log in 成功登录次数
+     ,count(distinct case when user_id = '0' and event = 'Click'
+    and actionData like '%successfully%'
+    and pageId1 = 'register' then concat(pageId1,ip) end) click_reg_cnt                       -- 页面顶部导航Log in 成功注册次数
+     ,count(case when event = 'PV' and pageId1 = 'download'then 1 end) download_cnt                                   -- download点击次数
+     ,count(distinct case when user_id = '0' and event = 'click' and actionId = 'Search searchPopInput'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) click_search_unlogin_cnt  -- 页面搜索框未登陆用户首次点击总次数
+     ,count(distinct case when user_id > '0' and event = 'click' and actionId = 'Search searchPopInput'
+    and pageId1 like 'homework_help_%' then concat(pageId1,ip) end) click_search_login_cnt    -- 页面搜索框登陆用户首次点击总次数
+     , substring(date_add(server_time_fmt,interval 8 hour),1,10) dt
+     ,os_ver
+from user_buried_point_log
+where platform = '6'
+  and os_ver in ('IOS','Android')
+  and server_time_fmt between ${start_date} and ${end_date}
+group by  substring(date_add(server_time_fmt,interval 8 hour),1,10)
+       ,os_ver
+;
